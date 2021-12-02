@@ -1,0 +1,14 @@
+name: blog_urb
+title: blog_urb
+username:
+account: lromualdo24
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5255935
+bundleId: 5321229
+url: https://lromualdo24.shinyapps.io/blog_urb/
+when: 1638484164.94706
+lastSyncTime: 1638484164.94707
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: MidwestCor.csv|NortheastCor.csv|scattering.csv|SouthCor.csv|vht-health.csv|WestCor.csv|wsj-titles-full.csv

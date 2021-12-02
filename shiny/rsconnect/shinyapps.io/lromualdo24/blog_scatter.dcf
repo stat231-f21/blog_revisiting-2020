@@ -1,0 +1,14 @@
+name: blog_scatter
+title: blog_scatter
+username:
+account: lromualdo24
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5256071
+bundleId: 5321281
+url: https://lromualdo24.shinyapps.io/blog_scatter/
+when: 1638485046.18525
+lastSyncTime: 1638485046.18527
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: MidwestCor.csv|NortheastCor.csv|SouthCor.csv|state_toplines.csv|urbanization-state.csv|vht-health.csv|WestCor.csv|wsj-titles-full.csv

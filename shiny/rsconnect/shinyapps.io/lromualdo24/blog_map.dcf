@@ -1,0 +1,14 @@
+name: blog_map
+title: blog_map
+username:
+account: lromualdo24
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5255515
+bundleId: 5321009
+url: https://lromualdo24.shinyapps.io/blog_map/
+when: 1638480550.28892
+lastSyncTime: 1638480550.28894
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: MidwestCor.csv|NortheastCor.csv|scattering.csv|SouthCor.csv|urbanization-state.csv|vht-health.csv|WestCor.csv|wsj-titles-full.csv

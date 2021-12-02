@@ -1,0 +1,14 @@
+name: blog_heatmap
+title: blog_heatmap
+username:
+account: lromualdo24
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5255665
+bundleId: 5321041
+url: https://lromualdo24.shinyapps.io/blog_heatmap/
+when: 1638481131.53766
+lastSyncTime: 1638481131.53768
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: scattering.csv|urbanization-state.csv|vht-health.csv|wsj-titles-full.csv
