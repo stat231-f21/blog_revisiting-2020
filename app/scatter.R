@@ -1,7 +1,10 @@
 library(tidyverse)
 library(shiny)
+library(usmap)
+library(maps)
+library(ggcorrplot)
 library(ggplot2)
-library(kableExtra) # for example code; delete if not needed
+library(kableExtra)
 
 input_names <- c("Date",
                  "Stock Market", 
@@ -76,7 +79,7 @@ ui1 <- fluidPage(
 server1 <- function(input, output) {
   output$scatter <- renderPlot({
     # read in data
-    pres <- read_csv("scattering.csv")
+    pres <- read_csv("data/scattering.csv")
     # create plot
     ggplot(
       data = pres, 

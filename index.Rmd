@@ -6,7 +6,7 @@ output:
   rmdformats::material:
     thumbnails: false
     highlight: "kate"
-runtime: shiny
+self_contained: false
 ---
 
 ```{r setup, include = FALSE}
@@ -25,183 +25,6 @@ library(stopwords)
 library(lubridate)
 library(factoextra)
 library(wordcloud)
-
-
-# Set code chunk defaults 
-knitr::opts_chunk$set(echo = FALSE, 
-                      mesage = FALSE,
-                      warning = FALSE,
-                      fig.align = "center")
-# Set R environment options
-options(knitr.kable.NA = '')
-
-# dataset for front page map
-states <- read_csv("data/state_toplines.csv") %>%
-  mutate(date = as.Date(modeldate, "%m/%d/%Y")) %>%
-  filter(state != "District of Columbia")
-
-# data wrangling for correlation heatmap
-MidwestCor <- read_csv("data/MidwestCor.csv") %>%
-  select(-State)
-row.names(MidwestCor) <- c("Wisconsin",
-                           "South Dakota",
-                           "Ohio",
-                           "North Dakota",
-                           "Nebraska",
-                           "Missouri",
-                           "Minnesota",
-                           "Michigan",
-                           "Kansas",
-                           "Iowa",
-                           "Indiana",
-                           "Illinois")
-
-NortheastCor <- read_csv("data/NortheastCor.csv") %>%
-  select(-State)
-row.names(NortheastCor) <- c("Vermont",
-                             "Rhode Island",
-                             "Pennsylvania",
-                             "New York",
-                             "New Jersey",
-                             "New Hampshire",
-                             "Massachusetts",
-                             "Maine",
-                             "Connecticut")
-
-SouthCor <- read_csv("data/SouthCor.csv") %>%
-  select(-State)
-row.names(SouthCor) <- c("West Virginia",
-                         "Virginia",
-                         "Texas",
-                         "Tennessee",
-                         "South Carolina",
-                         "Oklahoma",
-                         "North Carolina",
-                         "Mississippi",
-                         "Maryland",
-                         "Louisiana",
-                         "Kentucky",
-                         "Georgia",
-                         "Florida",
-                         "Delaware",
-                         "Arkansas",
-                         "Alabama")
-
-WestCor <- read_csv("data/WestCor.csv") %>%
-  select(-State)
-row.names(WestCor) <- c("Wyoming",
-                        "Washington",
-                        "Utah",
-                        "Oregon",
-                        "New Mexico",
-                        "Nevada",
-                        "Montana",
-                        "Idaho",
-                        "Hawaii",
-                        "Colorado",
-                        "California",
-                        "Arizona",
-                        "Alaska")
-
-correlation_vector <- list(MidwestCor,
-                        NortheastCor,
-                        SouthCor,
-                        WestCor)
-
-#create an input name vector
-region_input_names <- c("Midwest",
-                        "Northeast",
-                        "South",
-                        "West")
-region_input_values <- c(1, 2, 3, 4)
-names(region_input_values) <- region_input_names
-
-# wrangling for the urbanization plot
-
-Urbanization <- read_csv("data/urbanization-state.csv") %>%
-  filter(state != "American Samoa",
-         state != "District of Columbia",
-         state != "Guam",
-         state != "Northern Marianas",
-         state != "Puerto Rico",
-         state != "Virgin Islands")
-urbanstates <- read_csv("data/state_toplines.csv") %>%
-  mutate(date = as.Date(modeldate, "%m/%d/%Y")) %>%
-  filter(state != "District of Columbia",
-         state != "NE-3",
-         state != "NE-2",
-         state != "NE-1",
-         state != "ME-1",
-         state != "ME-2") %>%
-  select(state, margin, date)
-
-urbanstatesnov3 <- urbanstates %>%
-  filter(date == "2020-11-03") %>%
-  inner_join(Urbanization)
-urbanstatesnov3$winner <- ifelse(urbanstatesnov3$margin > 0, "Trump", "Biden")
-statenamesvector <- unique(urbanstatesnov3$state)
-
-# data wrangling for the wordcloud and scatterplot using WSJ data
-dates <- gsub('-',
-              '/',
-              as.character(seq(as.Date("2020/06/01"),
-                               as.Date("2020/11/03"),
-                               "days")))
-
-dates_tmp <- gsub('-',
-                  '/',as.character(seq(as.Date("2020/06/01"),
-                                       as.Date("2020/11/03"),
-                                       "days")))
-# create dates vector
-dates_compact <-substr(dates_tmp, start = 6, stop = 10)
-
-# read in healthcare and WSJ data
-titles_raw <- read_csv("data/wsj-titles-full.csv")
-health_raw <- read_csv("data/vht-health.csv")
-
-# read in sentiments
-bing <- get_sentiments("bing")
-nrc <- get_sentiments("nrc")
-afinn <- get_sentiments("afinn")
-nrc_emotions <- c("anger",
-                  "fear", 
-                  "anticipation",
-                  "trust",
-                  "surprise",
-                  "sadness",
-                  "joy",
-                  "disgust")
-
-health_raw <- health_raw %>%
-  mutate(volatility = (High - Low)/Volume*1000000)
-
-titles_compact <- titles_raw %>%
-  mutate(Raw_Words = apply(titles_raw[3:113],1,
-                           function(x) paste(x, collapse = " "))) %>%
-  select(Dates, Raw_Words)
-
-titles_expanded <- titles_compact %>%
-  set_rownames(dates_compact) %>%
-  select(Dates, Raw_Words) %>%
-  mutate(word = strsplit(as.character(Raw_Words), " ")) %>%
-  unnest(word) %>%
-  select(Dates,word) %>%
-  anti_join(get_stopwords(), by = "word") %>%
-  mutate(word = tolower(word))
-
-titles_tf_idf <- titles_raw %>%
-  mutate(Raw_Words = apply(titles_raw[3:113],1,
-                           function(x) paste(x, collapse = " "))) %>%
-  select(Dates, Raw_Words) %>%
-  mutate(Words = strsplit(as.character(Raw_Words), " ")) %>%
-  unnest(Words) %>%
-  select(Dates,Words) %>%
-  count(Dates, Words) %>%
-  bind_tf_idf(Words, Dates, n) %>%
-  arrange(desc(tf_idf))
-
-rownames(titles_raw) <- dates_compact
-rownames(titles_compact) <- dates_compact
 ```
 
 # Revisiting the 2020 Election
@@ -218,58 +41,15 @@ urltrump <- "https://9b16f79ca967fd0708d1-2713572fef44aa49ec323e813b06d2d9.ssl.c
 
 ## Interactive Map
 
-```{r map, echo = FALSE, message = FALSE, warning = FALSE}
+The map doesn't update after you click on the slider four times, so try refreshing the page if it doesn't update. Click [this link](https://lromualdo24.shinyapps.io/blog_map/) to view the map in a separate window.
 
-# Define UI for app that creates a line plot for a given name
-ui <- fluidPage(
-  # Slider to input date
-  sidebarLayout(
-    sidebarPanel(
-      sliderInput(inputId = "slider",
-                  label = "Date",
-                  min = as.Date("6/1/2020","%m/%d/%Y"),
-                  max = as.Date("11/3/2020","%m/%d/%Y"),
-                  value = as.Date("11/3/2020", "%m/%d/%Y"),
-                  timeFormat = "%m/%d/%Y")
-    ),
-    mainPanel(plotOutput(outputId = "map"))
-  )
-)
+```{r map, echo = FALSE, message = FALSE, warning = FALSE, out.width = "100%", out.extra = 'data-external="1" frameborder="no"'}
 
-
-# Define server logic required to draw a scatterplot
-server <- function(input, output) {
-  output$map <- renderPlot({
-    # select date for data
-    data_for_map <- reactive({
-      data <- states %>%
-        select(
-          state, date, margin
-        ) %>%
-        mutate("sign" = as.double(margin * (abs(margin))^(-1))) %>%
-        mutate("sqrtmargin" = sqrt(abs(margin))) %>%
-        mutate("adj_margin" = sqrtmargin * sign) %>%
-        filter(date == input$slider) %>%
-        select(
-          state, adj_margin
-        )
-    })
-
-    #plot map
-    plot_usmap(data = data_for_map(),
-               values = "adj_margin") + 
-      scale_fill_gradient2(high = "#E0010B",
-                           mid = "#FFFFFF",
-                           low = "#0664BC",
-                           midpoint = 0) + 
-      theme(legend.title = element_blank(), legend.position = "none")
-  })
-}
-
-# Run the application 
-shinyApp(ui = ui, server = server)
-
+knitr::include_app("https://lromualdo24.shinyapps.io/blog_map/",
+                   height = "400px")
 ```
+
+To build our interactive map, we used the package `usmap` and Shiny. First, we took the `state_toplines` dataset, which included each candidate's performance by state on each date, and used a slider input to select entries from a certain date (thereby leaving 50 entries for each state on the given input date). These data entries contained the margin in each state, or Trump's predicted percentage of the vote minus Biden's. Next, using the `usmap` package, we displayed this data in map form, using the function `scale_fill_gradient2()` to color each state by their respective margins. However, we realized that the variation margin blanked out a lot of states on the map: for example, if Biden is doing 10% better than Trump in Virginia, 1% better in Pennsylvania, and 30% better in Vermont, Vermont would appear deep blue on the map, but both Virginia and Pennsylvania would appear in a very pale shade of blue. This made it difficult to distinguish between each state's level of support for the candidates because only the most extreme states would appear in color. Thus, we took the square root of the margin in order to magnify the differences between states with margins close to 0 (where the candidates are running neck-and-neck), while ignoring the differences between a Biden +20 and a Biden +80 state, for example.
 
 ## Data & Methodology
 
@@ -303,31 +83,18 @@ Click on the tabs below to see the visualizations, read our analysis, and unders
 
 The first visualization we created use just the election data from FiveThirtyEight, delineated by state. Before looking into issues that may have had an impact on the election, we wanted to see how closely related voting patterns across the country were with each other. To accomplish this, we calculated and plotted the correlations between each state's voter preferences with each other, divided up by region. That is to say, we found how closely an increase in Biden's support in, for example, New York, would relate to a possible increase in Biden's support in Connecticut. 
 
-```{r heatmap, echo = FALSE, message = FALSE, warning = FALSE}
+Click [this link](https://lromualdo24.shinyapps.io/blog_heatmap/) to view the heatmap in a separate window.
 
-#build shiny app using above components
+```{r heatmap, echo = FALSE, message = FALSE, warning = FALSE, out.width = "100%", out.extra = 'data-external="1" frameborder="no"'}
 
-shinyApp(
-  ui = fluidPage(
-    titlePanel("Correlation Heatmap of Polling Results by Region"),
-    sidebarPanel(
-      selectInput(
-        inputId = "region",
-        label = "Region:",
-        choices = region_input_values,
-        selected = 1
-      )
-    ),
-    mainPanel(plotOutput(outputId = "themap"))
-  ), 
-  server = function(input, output) {
-    output$themap <- renderPlot({
-      ggcorrplot(as.data.frame(correlation_vector[as.numeric(input$region)]))
-    })
-  }
-)
+knitr::include_app("https://lromualdo24.shinyapps.io/blog_heatmap/",
+                   height = "500px")
 
 ```
+
+### Methodology
+
+To create the correlation heatmap, we took the `state_toplines` dataset and calculated the correlations between all 50 states using the `margin` variable. Imagine creating a scatterplot with the margin in one state on the x-axis and the margin in another state on the y-axis, where each data point represented a date: for our new dataset, we would use the correlation calculated from this data between these two states, repeated for every combination of the 50 states. Next, we saved these correlations to a data frame in the form of a matrix (like a table with 50 rows with all of the states and 50 columns with those states, and the cells containing the relevant correlations). While this process was not especially efficient, the `ggcorrplot` package, which is needed to create a heatmap, required that the data be inputted in this matrix format. However, calculating correlations between all 50 states was not feasible given this process, so we instead opted to stratify our data by region, using the census bureau's regional assignments to split our data. Once we calculated the correlations between states in each region, we created matrices for each region and input them into the `ggcorrplot()` function to create heatmaps for each region.
 
 ### Findings
 The results displayed in this correlation heatmap were not too surprising. Within each region, nearly all state pairings had a positive correlation with each other: for example, if Biden was doing better in Washington on a certain day, he was likely doing better in Oregon as well. 
@@ -358,37 +125,17 @@ Ultimately, this correlation plot helped confirm for us that, for the most part,
 
 Seeing that state voting patterns across the country are somewhat related to each other, we decided to look another factor that varies by state: Urbanization. To create this plot, we collected data from FiveThirtyEight on states' urbanization index, calculated on a logarithmic scale. A higher urbanization index indicates a more urban city. The urbanization index is plotted against the expected margin that Trump will win each state from November 3rd, 2020. Red points indicate a red state (Trump won) and blue points indicate a blue state (Biden won). The scatterplot currently shows all 50 states, but using the drop down select bar, you can delete states that you'd like to remove from the plot to highlight or view a specific state. Where on the plot does your state lie?
 
-For more about urbanization and politics, check out [this feature from FiveThirtyEight](https://fivethirtyeight.com/features/how-urban-or-rural-is-your-state-and-what-does-that-mean-for-the-2020-election/) which uses the same data.
+For more about urbanization and politics, check out [this feature from FiveThirtyEight](https://fivethirtyeight.com/features/how-urban-or-rural-is-your-state-and-what-does-that-mean-for-the-2020-election/) which uses the same data. To view the scatterplot in another window, click [here](https://lromualdo24.shinyapps.io/blog_urb/).
 
-```{r urbanization, echo = FALSE, message = FALSE, warning = FALSE}
+```{r urbanization, echo = FALSE, message = FALSE, warning = FALSE, out.width = "100%", out.extra = 'data-external="1" frameborder="no"'}
 
-uiUrb <- fluidPage (
-  titlePanel("Urbanization by State and Winning Candidates"),
-  selectInput(inputId = "state",
-              label = "Choose Which States to Include (all states are currently selected): ",
-              choices = statenamesvector,
-              selected = statenamesvector,
-              multiple = TRUE),
-  mainPanel(plotOutput(outputId = "urbanscat"))
-)
-serverUrb <- function(input, output) {
-  output$urbanscat <- renderPlot({
-    data <- urbanstatesnov3 %>%
-      filter(state %in% input$state)
-    ggplot(data = data,
-           aes(x = urbanindex,
-               y = margin,
-               color = winner)) +
-      geom_point() +
-      labs(title = "Urbanization vs. Margin",
-           x = "Urbanization Index",
-           y = "Margin") + 
-      scale_color_manual(values = c('Blue', 'Red'))
-  })
-}
+knitr::include_app("https://lromualdo24.shinyapps.io/blog_urb/", height="800px")
 
-shinyApp(ui = uiUrb, server = serverUrb)
 ```
+
+### Methodology 
+
+This plot was simply a scatterplot between urbanization and a state's political leanings; for the latter point, we used the state's predicted margin on election day (11/03/2020), while using the aforementioned `urbanization-state.csv` dataset to ascertain each state's urbanization index. However, beyond just creating a scatterplot using `ggplot`, we added a reactive component using Shiny, creating checkboxes for each state. Doing so allows users to select which states they want to see on a plot.  
 
 ### Findings
 The scatterplot above has one glaringly obvious trend: all of the red points have generally lower urbanization indices than the blue points, other than the few outliers. This means mostly all the states that supported Biden in the 2020 election were considered more urban states than those that supported Trump. The states with the lowest urbanization indices are Wyoming (8.26), Montana (8.47), and South Dakota (8.72). The states with the highest urbanization indices are New York (12.56), New Jersey (12.24), and California (12.19).
@@ -402,114 +149,19 @@ Based on the scatterplot comparing expected margin (favoring Trump) and urbaniza
 
 The second visualization we constructed was meant to convey a more thorough and comprehensive view  of the connections in the data we sought to investigate. To accomplish this, we created an interactive scatterplot using the majority of data we collected: national polling and election predictions from FiveThirtyEight, stock market, industry, and company stock data, COVID-19 cases and deaths, and more.
 
-On the scatterplot below, choose x- and y-axis variables, as well as variables to color and size the points on the chart, to see how different variables changed with each other over the course of the election season. If you want to take a more minimalistic approach, select 'none' to remove a graph feature (like varying the points' color or size). If you want to see how variables changed over time, select 'Date' as your x-axis variable.
+On the scatterplot below, choose x- and y-axis variables, as well as variables to color and size the points on the chart, to see how different variables changed with each other over the course of the election season. If you want to take a more minimalistic approach, select 'none' to remove a graph feature (like varying the points' color or size). If you want to see how variables changed over time, select 'Date' as your x-axis variable. To view the scatterplot in another tab, click [here](https://lromualdo24.shinyapps.io/blog_scatter/).
 
-```{r scatterplot, echo = FALSE, message = FALSE, warning = FALSE}
+```{r scatterplot, echo = FALSE, message = FALSE, warning = FALSE, out.width = "100%", out.extra = 'data-external="1" frameborder="no"'}
 
-input_names <- c("Date",
-                  "Stock Market", 
-                  "Trading Volume",
-                  "Daily COVID Deaths", 
-                  "Daily COVID Cases", 
-                  "Energy Industry", 
-                  "Healthcare Industry", 
-                  "Industrials Industry",
-                 "Democratic-Linked Companies",
-                 "Republican-Linked Companies",
-                  "Electoral College Win Probability (D)",
-                  "Popular Vote Win Probability (D)",
-                  "Expected Electoral Votes (D)",
-                  "Expected Vote Percentage (D)",
-                  "None"
-                  )
-
-# create input value vector using current variable names from dataset
-input_values <- c("date",
-                  "snp_close", 
-                  "snp_volume",
-                  "d_deaths", 
-                  "d_cases", 
-                  "energy_close", 
-                  "health_close", 
-                  "industrials_close",
-                  "dem_close",
-                  "gop_close",
-                  "ecwin_chal",
-                  "popwin_chal",
-                  "ev_chal",
-                  "national_voteshare_chal",
-                  0
-                  )
-
-# attach variable names to variables
-names(input_values) <- input_names
-
-# Define UI for app that creates a line plot for a given name
-ui1 <- fluidPage(
-  # Application title
-  titlePanel("Factors Influencing the National Vote"),
-  sidebarLayout(
-    sidebarPanel(
-      # selector bar for x-axis variable
-      selectInput(inputId = "xvar",
-                  label = "X Variable:",
-                  choices = input_values,
-                  selected = "date"),
-      # selector bar for y-axis variable
-      selectInput(inputId = "yvar",
-                  label = "Y Variable:",
-                  choices = input_values,
-                  selected = "national_voteshare_chal"),
-      # selector bar for variable to determine point size
-      selectInput(inputId = "sizevar",
-                  label = "Size by:",
-                  choices = input_values,
-                  selected = "d_deaths"),
-      # selector bar for variable to determine point color
-      selectInput(inputId = "colorvar",
-                  label = "Color by:",
-                  choices = input_values,
-                  selected = "snp_close"),
-    ),
-    mainPanel(plotOutput(outputId = "scatter"))
-  )
-)
-
-# Define server logic required to draw a scatterplot
-server1 <- function(input, output) {
-  output$scatter <- renderPlot({
-    # read in data
-    pres <- read_csv("data/scattering.csv")
-    # create plot
-    ggplot(
-      data = pres, 
-      aes_string(
-        x = input$xvar, 
-        y = input$yvar,
-        size = input$sizevar,
-        color = input$colorvar
-        )
-      ) + 
-      # add scatterplot feature
-      geom_point() + 
-      theme_bw() + 
-      # color for red to blue (for theme)
-      scale_colour_gradient(low = "#E0010B", high = "#0664BC") + 
-      # add labels and legend
-      labs(
-        x = input_names[input_values == input$xvar], 
-        y = input_names[input_values == input$yvar],
-        size = input_names[input_values == input$sizevar],
-        color = input_names[input_values == input$colorvar]
-        )
-  })
-}
-
-# Run the application 
-shinyApp(ui = ui1, server = server1)
+knitr::include_app("https://lromualdo24.shinyapps.io/blog_scatter/", height="500px")
 
 
 ```
+
+### Methodology
+
+To create the interactive scatterplot, we used a similar process as with the urbanization plot. Once the data was collected (all quantitative variables), we wanted to use Shiny to allow users to select which variables to see. In the Shiny UI function, four input menus were created: one for the x-variable, one for the y-variable, and input variables to size and color the points. However, recognizing that too many variables might overwhelm users, we also added a 'None' option to each input menu in case differentiating between points' size and color was unnecessary. Using a reactive `ggplot` scatterplot in Shiny, we created the interactive scatterplot.
+
 
 ### Findings
 In creating this interactive scatterplot, we noticed some interesting, and many surprising, relationships. Unsurprisingly, the most closely-related variables were the ones that were proxies for similar concepts (COVID cases and deaths, for example were highly correlated, as were Biden's expected share of the popular vote and his expected share of the electoral vote). However, some relationships stuck out as particularly strong: COVID cases and deaths, for example, were somewhat related to the performance of the industrials and energy industries, suggesting that investor confidence in energy and industrial companies may have been affected by their perceptions of the pandemic's severity. However, most surprisingly, COVID was not as closely correlated with the healthcare industry, even though companies like hospital providers and medical technology producers (that made equipment like ventilators) would have been expected to benefit from a new widespread disease. 
@@ -529,66 +181,10 @@ Ultimately, we couldn't find any obvious factors influencing the 2020 election b
 
 Next, we wanted to gain a better understanding of the specific events and issues that were shaping the election: to get a pulse on the national conversation, we scraped the headlines from _Wall Street Journal_ articles in the relevant time period (6/1/2020 to 11/3/2020). Using these headlines, we created a wordcloud displaying the most common topics in the news in a given timeframe.
 
-```{r wordcloud, echo = FALSE, message = FALSE, warning = FALSE}
-uiWC <- navbarPage(
-  title = "WSJ word cloud",
-  
-  # Tab 1: Word cloud
-  tabPanel(
-    title = "Word Cloud",
-    
-    sidebarLayout(
-      sidebarPanel(
-          sliderInput("slider",
-                      "Date range",
-                      min = as.Date("2020-06-01","%Y-%m-%d"),
-                      max = as.Date("2020-11-03","%Y-%m-%d"),
-                      value = c(as.Date("2020-06-01"),as.Date("2020-11-03")),
-                      timeFormat = "%Y-%m-%d")
-          ),
-      
-      mainPanel(plotOutput(outputId = "cloud"))
-      )
-    )
-  )
-  
-############
-# server   #
-############
-serverWC <- function(input, output){
-  
-  # TAB 1: Word Cloud
-  data_for_cloud <- reactive({
-    data <- filter(titles_raw, Dates <= input$slider)
-  })
-  
-  output$cloud <- renderPlot({
-     tmp <- data_for_cloud() %>% 
-      pivot_longer(
-        -Dates,
-        names_to = "title_pos",
-        values_to = "title_text"
-      ) %>%
-      unnest_tokens(word, title_text) %>%
-      anti_join(get_stopwords(), by = "word") %>%
-      select(Dates, word) %>%
-      count(word, sort = TRUE) %>%
-      filter(!(word %in% c("coronavirus","new","trump","covid","19","u.s","review","york", "popular", "news", "recommended", "videos")))
-      # Get rid of coronavirus, new, trump, covid, 19
-     wordcloud(
-        words = tmp$word,
-        freq = tmp$n,
-        max.words = 100,
-        random.order = FALSE,
-        color = tmp$n
-    )
-  })
-}
+```{r wordcloud, echo = FALSE, message = FALSE, warning = FALSE, out.width = "100%", out.extra = 'data-external="1" frameborder="no"'}
 
-####################
-# call to shinyApp #
-####################
-shinyApp(ui = uiWC, server = serverWC)
+knitr::include_app("https://lromualdo24.shinyapps.io/blog_wc/", height="500px")
+
 ```
 
 This wordcloud is interactive: in order to show how the issues of national importance evolved throughout the election cycle, we allowed users to set a date range of interest, allowing them to see what topics were most newsworthy in a given time period; for example, issues like 'police' were frequently in headlines in the early summer of 2020, corresponding to Black Lives Matter protests. Likewise, 'China' and the 'pandemic' were constants throughout the year, demonstrating the continued importance of the pandemic in the media.
@@ -596,100 +192,7 @@ This wordcloud is interactive: in order to show how the issues of national impor
 Following the word cloud, we wanted to delve deeper into the emotional sentiment of WSJ reporting and apply a more quantitative approach to embed the text matrix we have. To get a slight taste of latent semantic analysis for future research, we did some self-studying on different word embeddings and methods like principal component analysis and singular value decomposition and performed two kmeans clustering on the same text data frame embedded by two different lexicons(bing, nrc). We then displayed their results:
 
 ```{r sentiments, echo = FALSE, message = FALSE, warning = FALSE}
-uiSent <- fluidPage (
-  
-  tabPanel(
-    title = "Sentiment Analysis Continued...",
-    sidebarLayout(
-      sidebarPanel(
-        # Slider input for date range  
-        sliderInput("date2",
-                    "Date range",
-                    min = ymd("2020-06-01"),
-                    max = ymd("2020-11-03"),
-                    value = c(ymd("2020-06-01"), ymd("2020-11-03")),
-                    timeFormat = "%Y-%m-%d",
-                    animate = animationOptions(
-                      interval = 1000,
-                      loop = TRUE)
-        ),
-        sliderInput("cluster",
-                    "Number of Clusters",
-                    min = 1,
-                    max = 10,
-                    value=3,
-                    animate = animationOptions(
-                      interval = 1000,
-                      loop = TRUE)
-        )
-      ),
-      mainPanel(plotOutput(outputId = "bing"),
-                plotOutput(outputId = "nrc")))))
 
-
-serverSent <- function(input, output) {
-  # Create data for cloud 
-  bing_cluster <- reactive({
-    data <- titles_expanded %>%
-      inner_join(bing, by = "word") %>%
-      mutate(positive = ifelse(sentiment == "positive",1,0)) %>%
-      mutate(negative = ifelse(sentiment == "negative",1,0)) %>%
-      group_by(Dates) %>%
-      mutate(positive_emotions = sum(positive)) %>%
-      mutate(negative_emotions = sum(negative)) %>%
-      select(Dates, positive_emotions, negative_emotions) %>%
-      distinct() %>%
-      filter(Dates >= ymd(input$date2[1]), Dates <= ymd(input$date2[2]))
-      
-  })
-  
-  nrc_cluster <- reactive({
-    data <- titles_expanded %>%
-      filter(Dates >= ymd(input$date2[1]),
-             Dates <= ymd(input$date2[2])) %>%
-      inner_join(nrc, by = "word") %>%
-      group_by(Dates) %>%
-      mutate(anger = sum(sentiment == "anger"),
-             fear = sum(sentiment == "fear"),
-             anticipation = sum(sentiment == "anticipation"),
-             trust = sum(sentiment == "trust"),
-             surprise = sum(sentiment == "surprise"),
-             sadness = sum(sentiment == "sadness"),
-             joy = sum(sentiment == "joy"),
-             disgust = sum(sentiment == "disgust")) %>%
-      select(-c(word, sentiment)) %>%
-      distinct()
-  })
-  
-  
-  output$bing <- renderPlot({
-    tmp <- bing_cluster()
-    fviz_cluster(kmeans(tmp[2:3], input$cluster, iter.max = 1000, nstart = 5),
-                 data = tmp[2:3],
-                 palette = "Set1", 
-                 ellipse.type = "convex",
-                 labelsize = 5,
-                 main = "KMeans clustering with emotional directions",
-                 ggtheme = theme_bw()
-    )
-  })
-  
-  output$nrc <- renderPlot({
-    tmp <- nrc_cluster()
-    nrc_svd <- svd(tmp[2:9],2,2)
-    nrc_approx <- nrc_svd$u[,1:2] %*% diag(nrc_svd$d[1:2]) %*% t(nrc_svd$v[,1:2]) # matrix approximation
-    nrc_kmeans <- kmeans(nrc_approx, input$cluster, iter.max = 1000, nstart = 5)
-    fviz_cluster(nrc_kmeans, data = tmp[2:9],
-                 palette = "Set1", 
-                 ellipse.type = "convex",
-                 labelsize = 5,
-                 main = "KMeans clustering with emotional embeddings",
-                 ggtheme = theme_bw()
-    )
-  })
-  }
-
-shinyApp(ui = uiSent, server = serverSent)
 ```
 
 The graph on top used the bing lexicon and the graph at the bottom used the nrc lexicon. A bit of background information, NRC embeds every word into an 8-dimensional vector each representing a sentiment. The sentiments include anger, fear, anticipation, trust, surprise, sadness, joy, and disgust. Bing simply classifies words into positive ones and negative ones. So it seems that Bing’s embedding is more general and NRC’s embedding is more specific and fancy in a way. But as it turned out in our later analysis, a more specific lexicon might not always be the best choice when we as data science students are trying to convey ideas to our audience.
@@ -731,31 +234,9 @@ Over the course of our project, we used the following datasets:
 * COVID-19 Case and Death data from Johns Hopkins University's [pandemic dashboard](https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series)
 * Data scraped from headlines from _The Wall Street Journal_ during the election cycle, used to create a frequency wordcloud and sentiment analysis
 
-## Developing the Graphics
-
-### Interactive Map
+## Developing the Interactive Map
 
 To build our interactive map, we used the package `usmap` and Shiny. First, we took the `state_toplines` dataset, which included each candidate's performance by state on each date, and used a slider input to select entries from a certain date (thereby leaving 50 entries for each state on the given input date). These data entries contained the margin in each state, or Trump's predicted percentage of the vote minus Biden's. Next, using the `usmap` package, we displayed this data in map form, using the function `scale_fill_gradient2()` to color each state by their respective margins. However, we realized that the variation margin blanked out a lot of states on the map: for example, if Biden is doing 10% better than Trump in Virginia, 1% better in Pennsylvania, and 30% better in Vermont, Vermont would appear deep blue on the map, but both Virginia and Pennsylvania would appear in a very pale shade of blue. This made it difficult to distinguish between each state's level of support for the candidates because only the most extreme states would appear in color. Thus, we took the square root of the margin in order to magnify the differences between states with margins close to 0 (where the candidates are running neck-and-neck), while ignoring the differences between a Biden +20 and a Biden +80 state, for example.
-
-### Correlation Heatmap
-
-To create the correlation heatmap, we took the `state_toplines` dataset and calculated the correlations between all 50 states using the `margin` variable. Imagine creating a scatterplot with the margin in one state on the x-axis and the margin in another state on the y-axis, where each data point represented a date: for our new dataset, we would use the correlation calculated from this data between these two states, repeated for every combination of the 50 states. Next, we saved these correlations to a data frame in the form of a matrix (like a table with 50 rows with all of the states and 50 columns with those states, and the cells containing the relevant correlations). While this process was not especially efficient, the `ggcorrplot` package, which is needed to create a heatmap, required that the data be inputted in this matrix format. However, calculating correlations between all 50 states was not feasible given this process, so we instead opted to stratify our data by region, using the census bureau's regional assignments to split our data. Once we calculated the correlations between states in each region, we created matrices for each region and input them into the `ggcorrplot()` function to create heatmaps for each region.
-
-### Urbanization Plot
-
-This plot was simply a scatterplot between urbanization and a state's political leanings; for the latter point, we used the state's predicted margin on election day (11/03/2020), while using the aforementioned `urbanization-state.csv` dataset to ascertain each state's urbanization index. However, beyond just creating a scatterplot using `ggplot`, we added a reactive component using Shiny, creating checkboxes for each state. Doing so allows users to select which states they want to see on a plot.  
-
-### Interactive Scatterplot
-
-To create the interactive scatterplot, we used a similar process as with the urbanization plot. Once the data was collected (all quantitative variables), we wanted to use Shiny to allow users to select which variables to see. In the Shiny UI function, four input menus were created: one for the x-variable, one for the y-variable, and input variables to size and color the points. However, recognizing that too many variables might overwhelm users, we also added a 'None' option to each input menu in case differentiating between points' size and color was unnecessary. Using a reactive `ggplot` scatterplot in Shiny, we created the interactive scatterplot.
-
-### Sentiment Analysis
-
-
-
-### Wordcloud
-
-
 
 ## Limitations
 
