@@ -7,6 +7,7 @@ library(kableExtra)
 # data wrangling for correlation heatmap
 MidwestCor <- read_csv("data/MidwestCor.csv") %>%
   select(-State)
+# add state names
 row.names(MidwestCor) <- c("Wisconsin",
                            "South Dakota",
                            "Ohio",
@@ -67,6 +68,7 @@ row.names(WestCor) <- c("Wyoming",
                         "Arizona",
                         "Alaska")
 
+# combine each region into a list to build vector needed for heatmap function
 correlation_vector <- list(MidwestCor,
                            NortheastCor,
                            SouthCor,
@@ -85,6 +87,7 @@ shinyApp(
   ui = fluidPage(
     titlePanel("Correlation Heatmap of Polling Results by Region"),
     sidebarPanel(
+      # create menu to select region
       selectInput(
         inputId = "region",
         label = "Region:",
@@ -96,7 +99,9 @@ shinyApp(
   ), 
   server = function(input, output) {
     output$themap <- renderPlot({
-      ggcorrplot(as.data.frame(correlation_vector[as.numeric(input$region)]))
+      # use ggcorrplot package to create heatmap
+      # use index for input region to select the correct region from the correlation vector
+      ggcorrplot(as.data.frame(correlation_vector[as.numeric(input$region)])) 
     })
   }
 )

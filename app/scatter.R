@@ -6,6 +6,7 @@ library(ggcorrplot)
 library(ggplot2)
 library(kableExtra)
 
+# create vector of each variable's name to display in the input menu boxes
 input_names <- c("Date",
                  "Stock Market", 
                  "Trading Volume",

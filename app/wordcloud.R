@@ -28,6 +28,7 @@ dates_compact <-substr(dates_tmp, start = 6, stop = 10)
 titles_raw <- read_csv("wsj-titles-full.csv")
 health_raw <- read_csv("vht-health.csv")
 
+# read in health industry data
 health_raw <- health_raw %>%
   mutate(volatility = (High - Low)/Volume*1000000)
 
@@ -63,6 +64,7 @@ uiWC <- navbarPage(
   title = "WSJ Word Cloud",
     sidebarLayout(
       sidebarPanel(
+        # slider to input date range
         sliderInput("slider",
                     "Date range",
                     min = as.Date("2020-06-01","%Y-%m-%d"),
@@ -82,9 +84,11 @@ serverWC <- function(input, output){
   
   # TAB 1: Word Cloud
   data_for_cloud <- reactive({
+    # filter out data not in the date range
     data <- filter(titles_raw, Dates <= input$slider)
   })
   
+  # plot wordcloud
   output$cloud <- renderPlot({
     tmp <- data_for_cloud() %>% 
       pivot_longer(
@@ -92,12 +96,17 @@ serverWC <- function(input, output){
         names_to = "title_pos",
         values_to = "title_text"
       ) %>%
+      # separate each word from the WSJ titles
       unnest_tokens(word, title_text) %>%
+      # remove stopwords
       anti_join(get_stopwords(), by = "word") %>%
       select(Dates, word) %>%
+      # count number of instances for each word
       count(word, sort = TRUE) %>%
+      # remove prominent words without meaning (New York is not an important event, but is frequently mentioned because of the WSJ's headquarter location)
       filter(!(word %in% c("new","u.s","review","york", "popular", "news", "recommended", "videos", "coronavirus", "19", "covid")))
     # Get rid of coronavirus, new, trump, covid, 19
+    # create wordcloud
     wordcloud(
       words = tmp$word,
       freq = tmp$n,
