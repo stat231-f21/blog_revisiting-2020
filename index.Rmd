@@ -129,7 +129,7 @@ For more about urbanization and politics, check out [this feature from FiveThirt
 
 ```{r urbanization, echo = FALSE, message = FALSE, warning = FALSE, out.width = "100%", out.extra = 'data-external="1" frameborder="no"'}
 
-knitr::include_app("https://lromualdo24.shinyapps.io/blog_urb/", height="800px")
+knitr::include_app("https://pbakshi24.shinyapps.io/urbanization/", height = "800px")
 
 ```
 
@@ -153,7 +153,7 @@ On the scatterplot below, choose x- and y-axis variables, as well as variables t
 
 ```{r scatterplot, echo = FALSE, message = FALSE, warning = FALSE, out.width = "100%", out.extra = 'data-external="1" frameborder="no"'}
 
-knitr::include_app("https://lromualdo24.shinyapps.io/blog_scatter/", height="500px")
+knitr::include_app("https://lromualdo24.shinyapps.io/blog_scatter/", height = "500px")
 
 
 ```
@@ -189,23 +189,36 @@ knitr::include_app("https://lromualdo24.shinyapps.io/blog_wc/", height="500px")
 
 This wordcloud is interactive: in order to show how the issues of national importance evolved throughout the election cycle, we allowed users to set a date range of interest, allowing them to see what topics were most newsworthy in a given time period; for example, issues like 'police' were frequently in headlines in the early summer of 2020, corresponding to Black Lives Matter protests. Likewise, 'China' and the 'pandemic' were constants throughout the year, demonstrating the continued importance of the pandemic in the media.
 
-Following the word cloud, we wanted to delve deeper into the emotional sentiment of WSJ reporting and apply a more quantitative approach to embed the text matrix we have. To get a slight taste of latent semantic analysis for future research, we did some self-studying on different word embeddings and methods like principal component analysis and singular value decomposition and performed two kmeans clustering on the same text data frame embedded by two different lexicons(bing, nrc). We then displayed their results:
+Following the word cloud, we wanted to delve deeper into the emotional sentiment of WSJ reporting and apply a more quantitative approach to analyze the text matrix and its impact on the financial market. To get a slight taste of latent semantic analysis for future research, we did some self-studying on different word lexicons and methods like principal component analysis and singular value decomposition and performed two $k$-means clustering on all Wall Street Journal news titles. We also fitted a linear regression model using our text matrix to predict the relative position of the Industrials Index of the New York Stock Exchange, drawing from the hypothesis that media sentiment might impact people’s financial decisions.
+
+### Introduction
+
+First, our text matrix: each row of the wrangled text dataset represents all the news titles in that single day (June 1st to November 3rd), and there are two columns: the first column is just the date, while the second column contains all the news titles in one string.
+
+Next, we had to load in lexicons with sentiments for eaach word. When we use the $NRC$ lexicon, each word receives a ”yes”(1) or “no”(0) value for each of 8 categories (like trust, anger, surprise…). We represent every day with an 8-dimensional vector, each dimension representing an emotion. The value of each dimension is the number of words that day that contain the emotion. Similarly, for the $bing$ lexicon, each word is simply classified as either “positive”(1) or “negative”(0). We represent every day with a 2-dimensional vector. The first dimension is the number of words that are positive in that day. The second dimension is the number of words that are negative in that day.
+
+### Models/Methodology
+
+* $k$-Means Clustering: Because the $NRC$ text matrix represents every day with 8 emotions, we allow the user to choose 2 out of 8 emotions to perform K-Means clustering on. We also allow the user to choose 
+* Linear Regression: Our hypothesis is that WSJ’s reporting sentiment might not change the long-term fundamentals of an industry. However, the sentiment may impact people’s short-term perception of where the market is headed and therefore might be an effective indicator of short-term trading momentum (short-term movements of the index). Also, WSJ is a relatively conservative media, so its readership might include more investors of traditional industries like energy and industrials. To test out this hypothesis, we designed two variables:
+* Percentage: A measure of the relative position (0%–100%) of the industrials index of the New York Stock Exchange. We measure the closing price, high price, low price of every trading day within a user-selected date range. 0% would mean that the industrials index is at its lowest point during the selected time period while 100% would mean that the index is at its highest: 
+
+    > Percentile = $\frac{(Close\_Price \ - \ min(Low\_Price))}{(max(High\_Price)\ - \ min(Low\_Price))}$
+
+* Sentiment Ratio: To adjust for the absolute number of words, the ratio (0 - 1) is the number of positive words divided by the number of negative words.
+* Ratio = $\frac{Positive\_Num}{Negative\_ Num}$
 
 ```{r sentiments, echo = FALSE, message = FALSE, warning = FALSE}
 
+knitr::include_app("https://lromualdo24.shinyapps.io/blog_sentiment/", height = "2400px")
+
 ```
 
-The graph on top used the bing lexicon and the graph at the bottom used the nrc lexicon. A bit of background information, NRC embeds every word into an 8-dimensional vector each representing a sentiment. The sentiments include anger, fear, anticipation, trust, surprise, sadness, joy, and disgust. Bing simply classifies words into positive ones and negative ones. So it seems that Bing’s embedding is more general and NRC’s embedding is more specific and fancy in a way. But as it turned out in our later analysis, a more specific lexicon might not always be the best choice when we as data science students are trying to convey ideas to our audience.
+### Analysis
 
-A brief introduction: our wrangled text matrix is a 156 row * 2 columns matrix: The first column is just a date sequence(from Jun. 1st, to Nov. 3rd) while the second column is a string collapsing all WSJ news titles of that day. 
+* $k$-Means Clustering: In our shiny app project, we discovered that Wall Street journal is a relatively conservative media that sees things in a more negative than positive light. Looking at the $k$-Means Clustering plot using the $bing$ lexicon, we further discovered that positive words and negative words seem to be negatively correlated in their frequency(in the $bing$ clustering plot), which suggests that WSJ is a consistent media as well(the sentiments of their articles remain relatively stable in a given day, that positive news titles appear together and vice versa). A more dynamic/diverse reporting style would probably see a more random distribution of word embedding plots. 
 
-For the bing lexicon, we embedded the matrix so that each day is represented by a 2-dimensional vector where the first dimension counts the number of positive words in news titles that day and the second dimension counts the number of negative words in news titles that day. We then performed kmeans clustering for a given set of dates that we can choose here and generated the plot. In our shiny app project, we discovered that Wall Street journal is a relatively conservative media that sees things in a more negative than positive light. From this plot, we further discovered that positive words and negative words seem to be negatively correlated in their frequency, which suggests that WSJ is a consistent media as well(the sentiments of their articles remain relatively stable in a given day, that positive news titles appear together and vice versa). A more dynamic/diverse reporting style would probably see a more random distribution of word embedding plots. 
-
-For the NRC lexicon, because the word embedding represented each day with an 8-dimensional vector, some form of low-rank approximation is needed. In linear algebra, low-rank approximation generally refers to the practice of representing a matrix with fewer dimensions than it originally had by discovering a vector basis of fewer dimensions. Here we chose singular value decomposition, and because we wanted to plot our final nrc kmeans graph as a direct comparison to the bing kmeans graph, we chose to reduce our 8-dimensional vector to 2 dimensions and compare our clustering results.
-
-What we can see from the graph is that the bing lexicon yielded a seemingly less random clustering result. Our hypothesis is that because our dimensionality reduction from 8 to 2 dimensions in nrc killed off too much variance within our text matrix and the resulting residual variance looks more random than the original one, which suggests that the text matrices themselves might not have that great of a pattern because there aren’t too many dimensions that explained significantly more variance within the dataset than others. 
-
-In conclusion, we believed that even though nrc is a more specific lexicon, it may be hard to visualize. When we do try to visualize in a straightforward way, the nrc lexicon actually performs worse than a more general lexicon like bing which captures the main story of our dataset. It reminded us of what Professor Bailey said, when working in data science, we have to always keep in mind that we are facing an audience, and that effective communication of our ideas are often times much more important than simply showing off fancy technicalities. 
+* Linear Regression: By fitting our linear regression model over many choices of date ranges, we generated a predictive model by including all dates from June 1st to November 3rd, and our following model has a significant linear coefficient, suggesting that more positive WSJ sentiment is positively correlated with an upward momentum for the industrials index. 
 
 # Conclusion
 
@@ -248,6 +261,10 @@ Another limitation was in our choice of method, choosing to analyze correlations
 
 A third concern we had related to the use of the stock market as a proxy for public opinion on the economy. The stock market is determined by investors, most of whom are not the average voter. The stock market did not, for example, track closely with other measures like unemployment, which remained high for many months after the pandemic began, even though the stock market had recovered from its pandemic-related collapse within several weeks. Ideally, we could have used more definitive measures of the economy like unemployment, GDP, or median household income. Unfortunately, many of these data points are only calculated by the month, quarter, or even year. Because of this, we would not be able to match these points to our daily data for COVID-19, industry indices, or the election prediction data. On a related note, the data we used for Republican-linked companies for the scatterplot was not ideal; no major public companies donated to the Republican Party in 2020 _or_ in 2016. As a result, the list of companies we used to construct a stock index for Republican-supporting corporations came from 2012 donation data. Simply put, Mitt Romney's donors are unlikely to be similar to Trump's, given their dissimilar temperaments and policy platforms. In fact, we found that these Republican-linked companies performed better in the stock market as Joe Biden improved in the polls, indicating that these ex-Republican-supporters in the corporate world may even view Biden's policies as more beneficial than Trump's.
 
-The final major limitation of our work was that many of the factors affecting a national election are not easily quantifiable. Cultural and geographic factors, for example, may have evolved over the course of the election cycle and affected each candidate, but we had no way of measuring these factors on a day-by-day basis. As a result, our analysis is missing a pool of qualitative variables that may have had a far greater impact than other, better-quantifiable and measurable issues.
+Another limitation of our work was that many of the factors affecting a national election are not easily quantifiable. Cultural and geographic factors, for example, may have evolved over the course of the election cycle and affected each candidate, but we had no way of measuring these factors on a day-by-day basis. As a result, our analysis is missing a pool of qualitative variables that may have had a far greater impact than other, better-quantifiable and measurable issues.
+
+Lastly, regarding the sentiment analysis, we experimented with but gave up on low-rank approximation as approximating the 8-dimensional NRC matrix to 2-dimensions killed off too much variance within the dataset. As a result, it became very hard to tell which dimensions explained the most variance within our text matrix. We instead gave the user the option to choose 2 dimension and perform K-means Clustering. Even though we displayed a sum of squared error plot on the side, we believed that more interpretations could be drawn from the dataset if we designed more intricate ways to represent our text matrix in 2 dimensions (by grouping emotions into 2 categories). 
+
+We also only included sources from the WSJ and performed a simple linear regression in the industrials index for the sentiment analysis, and the industrials index was relatively stable during our chosen date range. To further our research, we could include a more comprehensive list of news sources (political spectrum, age of readership etc). We could also include longer date ranges to see if sudden market shocks are predictable. 
 
 Despite these limitations, our work nevertheless produces useful information regarding the factors that affected the 2020 election.
